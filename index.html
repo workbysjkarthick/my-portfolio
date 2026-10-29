@@ -360,10 +360,10 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
       <h2>Tata Consultancy Services, since February 2014</h2>
       <div class="timeline">
         <article class="job">
-          <div class="when"><span class="roll">Dec 2019 – Present</span><span class="client">Wintrust Financial Corporation</span></div>
+          <div class="when">Dec 2019 – Present<span class="client">Wintrust Financial Corporation</span></div>
           <div>
             <h3>Senior Developer · Wintrust Marketing</h3>
-            <p class="meta">Assistant Consultant · <span class="roll">7</span>-person team</p>
+            <p class="meta">Assistant Consultant · 7-person team</p>
             <p class="summary">Wintrust runs a separate website for each of its charter and sub-charter banks, originally built on legacy technology and third-party services. I maintain and enhance these sites while modernizing them to cut operating costs, close security and compliance gaps, and replace outside services with Wintrust's own.</p>
             <ul>
               <li>Develop application layers, components, microservices and APIs from approved high-level designs.</li>
@@ -377,10 +377,10 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
           </div>
         </article>
         <article class="job">
-          <div class="when"><span class="roll">Dec 2014 – Aug 2019</span><span class="client">Citigroup</span></div>
+          <div class="when">Dec 2014 – Aug 2019<span class="client">Citigroup</span></div>
           <div>
             <h3>Developer · Cards Retail Services</h3>
-            <p class="meta"><span class="roll">10</span>-person team</p>
+            <p class="meta">10-person team</p>
             <p class="summary">Built and enhanced the account management website for Citi's co-branded partner credit cards, covering payments, statements, rewards, profile management, password reset and an expense tracker.</p>
             <ul>
               <li>Migrated the legacy site to Angular, creating new modules, components, pipes, filters and routes.</li>
@@ -546,7 +546,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
     });
   });
 
-  // Counter numbers: every number shows 0 on page load, then counts up to its real value
+  // Stat counters: each shows 0 on page load, then counts up to its real value
   var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   function render(el, progress) {
     el.textContent = el.dataset.final.replace(/\d+/g, function (n) {
@@ -573,14 +573,6 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
   });
   // Stats at the top start counting as soon as the page loads
   document.querySelectorAll('.stat .roll').forEach(count);
-  // Numbers further down start counting when they scroll into view
-  var later = Array.prototype.filter.call(rollers, function (el) { return !el.closest('.stat'); });
-  if ('IntersectionObserver' in window) {
-    var countIO = new IntersectionObserver(function (entries) {
-      entries.forEach(function (en) { if (en.isIntersecting) { count(en.target); countIO.unobserve(en.target); } });
-    }, { threshold: 0.5 });
-    later.forEach(function (el) { countIO.observe(el); });
-  } else { later.forEach(count); }
 
   document.getElementById('year').textContent = new Date().getFullYear();
 })();
