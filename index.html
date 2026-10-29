@@ -274,6 +274,27 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
 @media (forced-colors: active) {
   .btn, .copy, .to-top, .nav ul a.active { border: 2px solid ButtonText; }
 }
+
+/* Dice-roll numbers */
+.roll { display: inline-block; font-variant-numeric: tabular-nums; transform-origin: 50% 60%; }
+.roll.rolling { animation: dice-tumble .85s cubic-bezier(.25, 1.4, .5, 1); }
+.stat .roll.rolling { animation-name: dice-tumble-big; }
+@keyframes dice-tumble {
+  0% { transform: translateY(-10px) rotate(-22deg) scale(.88); }
+  25% { transform: translateY(3px) rotate(14deg); }
+  50% { transform: translateY(-3px) rotate(-8deg); }
+  75% { transform: translateY(1px) rotate(4deg); }
+  100% { transform: none; }
+}
+@keyframes dice-tumble-big {
+  0% { transform: translateY(-18px) rotate(-35deg) scale(.8); }
+  30% { transform: translateY(4px) rotate(20deg) scale(1.06); }
+  55% { transform: translateY(-4px) rotate(-10deg); }
+  80% { transform: translateY(1px) rotate(4deg); }
+  100% { transform: none; }
+}
+.stat { cursor: default; }
+@media (prefers-reduced-motion: reduce) { .roll.rolling { animation: none; } }
 </style>
 </head>
 <body>
@@ -307,10 +328,10 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
         <a class="btn ghost" href="#contact">Get in touch</a>
       </div>
       <div class="stats">
-        <div class="stat"><b>12+</b><span>years at Tata Consultancy Services</span></div>
-        <div class="stat"><b>2</b><span>long-term banking clients</span></div>
-        <div class="stat"><b>5</b><span>key product launches</span></div>
-        <div class="stat"><b>9</b><span>internal performance awards</span></div>
+        <div class="stat"><b class="roll">12+</b><span>years at Tata Consultancy Services</span></div>
+        <div class="stat"><b class="roll">2</b><span>long-term banking clients</span></div>
+        <div class="stat"><b class="roll">5</b><span>key product launches</span></div>
+        <div class="stat"><b class="roll">9</b><span>internal performance awards</span></div>
       </div>
     </div>
   </section>
@@ -354,10 +375,10 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
       <h2>Tata Consultancy Services, since February 2014</h2>
       <div class="timeline">
         <article class="job">
-          <div class="when">Dec 2019 – Present<span class="client">Wintrust Financial Corporation</span></div>
+          <div class="when"><span class="roll">Dec 2019 – Present</span><span class="client">Wintrust Financial Corporation</span></div>
           <div>
             <h3>Senior Developer · Wintrust Marketing</h3>
-            <p class="meta">Assistant Consultant · 7-person team</p>
+            <p class="meta">Assistant Consultant · <span class="roll">7</span>-person team</p>
             <p class="summary">Wintrust runs a separate website for each of its charter and sub-charter banks, originally built on legacy technology and third-party services. I maintain and enhance these sites while modernizing them to cut operating costs, close security and compliance gaps, and replace outside services with Wintrust's own.</p>
             <ul>
               <li>Develop application layers, components, microservices and APIs from approved high-level designs.</li>
@@ -371,10 +392,10 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
           </div>
         </article>
         <article class="job">
-          <div class="when">Dec 2014 – Aug 2019<span class="client">Citigroup</span></div>
+          <div class="when"><span class="roll">Dec 2014 – Aug 2019</span><span class="client">Citigroup</span></div>
           <div>
             <h3>Developer · Cards Retail Services</h3>
-            <p class="meta">10-person team</p>
+            <p class="meta"><span class="roll">10</span>-person team</p>
             <p class="summary">Built and enhanced the account management website for Citi's co-branded partner credit cards, covering payments, statements, rewards, profile management, password reset and an expense tracker.</p>
             <ul>
               <li>Migrated the legacy site to Angular, creating new modules, components, pipes, filters and routes.</li>
@@ -538,6 +559,44 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
       function fallback() { var r = document.createRange(); r.selectNodeContents(el); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = 'Selected'; setTimeout(function () { b.textContent = 'Copy'; }, 1600); }
       try { navigator.clipboard.writeText(text).then(done, fallback); } catch (e) { fallback(); }
     });
+  });
+
+  // Dice-roll numbers: digits shuffle and the number tumbles, then settles on its real value
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function roll(el) {
+    if (reduceMotion || el.dataset.busy) return;
+    var final = el.dataset.final || el.textContent;
+    el.dataset.final = final; el.dataset.busy = '1';
+    el.setAttribute('aria-label', final);
+    var chars = final.split(''), digitIdx = [];
+    chars.forEach(function (c, i) { if (/\d/.test(c)) digitIdx.push(i); });
+    var duration = 850, start = performance.now(), last = 0;
+    el.classList.remove('rolling'); void el.offsetWidth; el.classList.add('rolling');
+    function frame(now) {
+      var t = now - start;
+      if (now - last > 55 || t >= duration) {
+        last = now;
+        var out = chars.slice();
+        digitIdx.forEach(function (i, k) {
+          var settle = duration * (0.45 + 0.55 * (k + 1) / digitIdx.length);
+          if (t < settle) out[i] = String(Math.floor(Math.random() * 10));
+        });
+        el.textContent = out.join('');
+      }
+      if (t < duration) requestAnimationFrame(frame);
+      else { el.textContent = final; delete el.dataset.busy; setTimeout(function () { el.classList.remove('rolling'); }, 50); }
+    }
+    requestAnimationFrame(frame);
+  }
+  var rollers = document.querySelectorAll('.roll');
+  if ('IntersectionObserver' in window) {
+    var rollIO = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) { if (en.isIntersecting) { roll(en.target); rollIO.unobserve(en.target); } });
+    }, { threshold: 0.8 });
+    rollers.forEach(function (el) { rollIO.observe(el); });
+  }
+  document.querySelectorAll('.stat').forEach(function (st) {
+    st.addEventListener('mouseenter', function () { roll(st.querySelector('.roll')); });
   });
 
   document.getElementById('year').textContent = new Date().getFullYear();
