@@ -278,6 +278,8 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
 /* Counter numbers: count up from zero */
 .roll { display: inline-block; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .stat { cursor: default; }
+.stat b { transform-origin: left bottom; transition: transform .25s ease; }
+.stat:hover b { transform: scale(1.25); }
 </style>
 </head>
 <body>
@@ -579,9 +581,6 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
     }, { threshold: 0.5 });
     later.forEach(function (el) { countIO.observe(el); });
   } else { later.forEach(count); }
-  document.querySelectorAll('.stat').forEach(function (st) {
-    st.addEventListener('mouseenter', function () { count(st.querySelector('.roll')); });
-  });
 
   document.getElementById('year').textContent = new Date().getFullYear();
 })();
