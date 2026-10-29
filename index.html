@@ -275,15 +275,8 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
   .btn, .copy, .to-top, .nav ul a.active { border: 2px solid ButtonText; }
 }
 
-/* Odometer numbers: count up from zero on rolling digit wheels, like a fuel pump meter */
+/* Counter numbers: count up from zero */
 .roll { display: inline-block; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.roll .wheel {
-  display: inline-block; height: 1.2em; line-height: 1.2em; overflow: hidden; vertical-align: bottom;
-  -webkit-mask-image: linear-gradient(transparent, #000 22%, #000 78%, transparent);
-          mask-image: linear-gradient(transparent, #000 22%, #000 78%, transparent);
-}
-.roll .strip { display: block; will-change: transform; }
-.roll .strip span { display: block; height: 1.2em; text-align: center; }
 .stat { cursor: default; }
 </style>
 </head>
@@ -551,71 +544,43 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
     });
   });
 
-  // Odometer numbers: every number counts up from 0 on rolling wheels, then settles on its real value
+  // Counter numbers: every number shows 0 on page load, then counts up to its real value
   var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  function buildWheels(el, final) {
-    var parts = final.split(/(\d+)/), wheels = [];
-    el.textContent = '';
-    parts.forEach(function (part) {
-      if (!part) return;
-      if (!/^\d+$/.test(part)) { el.appendChild(document.createTextNode(part)); return; }
-      var target = parseInt(part, 10), group = { target: target, cols: [] };
-      for (var k = 0; k < part.length; k++) {
-        var wheel = document.createElement('span'); wheel.className = 'wheel';
-        var strip = document.createElement('span'); strip.className = 'strip';
-        for (var d = 0; d <= 10; d++) { var c = document.createElement('span'); c.textContent = d % 10; strip.appendChild(c); }
-        wheel.appendChild(strip); el.appendChild(wheel);
-        group.cols.push({ strip: strip, place: Math.pow(10, part.length - 1 - k) });
-      }
-      wheels.push(group);
-    });
-    return wheels;
-  }
-  function setValue(group, v) {
-    group.cols.forEach(function (col) {
-      var p = col.place, digit = Math.floor(v / p) % 10, pos;
-      if (p === 1) pos = v % 10;
-      else { var rest = v % p; pos = digit + Math.max(0, rest - (p - 1)); }
-      col.strip.style.transform = 'translateY(' + (-pos * 1.2) + 'em)';
+  function render(el, progress) {
+    el.textContent = el.dataset.final.replace(/\d+/g, function (n) {
+      return String(Math.round(parseInt(n, 10) * progress));
     });
   }
-  function roll(el) {
+  function count(el) {
     if (reduceMotion || el.dataset.busy) return;
-    var final = el.dataset.final || el.textContent;
-    el.dataset.final = final; el.dataset.busy = '1';
-    el.setAttribute('aria-label', final);
-    var groups = el._groups || buildWheels(el, final);
-    el._groups = null;
-    var duration = 1600, start = performance.now();
-    groups.forEach(function (g) { setValue(g, 0); });
+    el.dataset.busy = '1';
+    var duration = 1800, start = performance.now();
     function frame(now) {
       var t = Math.min(1, (now - start) / duration);
-      var e = 1 - Math.pow(1 - t, 3);
-      groups.forEach(function (g) { setValue(g, g.target * e); });
+      render(el, 1 - Math.pow(1 - t, 3));
       if (t < 1) requestAnimationFrame(frame);
-      else { el.textContent = final; delete el.dataset.busy; }
+      else { el.textContent = el.dataset.final; delete el.dataset.busy; }
     }
     requestAnimationFrame(frame);
   }
   var rollers = document.querySelectorAll('.roll');
-  // Show every number at 0 as soon as the page loads, ready to count up
-  if (!reduceMotion) {
-    rollers.forEach(function (el) {
-      var final = el.textContent;
-      el.dataset.final = final;
-      el.setAttribute('aria-label', final);
-      el._groups = buildWheels(el, final);
-      el._groups.forEach(function (g) { setValue(g, 0); });
-    });
-  }
+  rollers.forEach(function (el) {
+    el.dataset.final = el.textContent;
+    el.setAttribute('aria-label', el.dataset.final);
+    if (!reduceMotion) render(el, 0);
+  });
+  // Stats at the top start counting as soon as the page loads
+  document.querySelectorAll('.stat .roll').forEach(count);
+  // Numbers further down start counting when they scroll into view
+  var later = Array.prototype.filter.call(rollers, function (el) { return !el.closest('.stat'); });
   if ('IntersectionObserver' in window) {
-    var rollIO = new IntersectionObserver(function (entries) {
-      entries.forEach(function (en) { if (en.isIntersecting) { roll(en.target); rollIO.unobserve(en.target); } });
+    var countIO = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) { if (en.isIntersecting) { count(en.target); countIO.unobserve(en.target); } });
     }, { threshold: 0.5 });
-    rollers.forEach(function (el) { rollIO.observe(el); });
-  }
+    later.forEach(function (el) { countIO.observe(el); });
+  } else { later.forEach(count); }
   document.querySelectorAll('.stat').forEach(function (st) {
-    st.addEventListener('mouseenter', function () { roll(st.querySelector('.roll')); });
+    st.addEventListener('mouseenter', function () { count(st.querySelector('.roll')); });
   });
 
   document.getElementById('year').textContent = new Date().getFullYear();
