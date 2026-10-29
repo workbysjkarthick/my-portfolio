@@ -584,7 +584,8 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
     var final = el.dataset.final || el.textContent;
     el.dataset.final = final; el.dataset.busy = '1';
     el.setAttribute('aria-label', final);
-    var groups = buildWheels(el, final);
+    var groups = el._groups || buildWheels(el, final);
+    el._groups = null;
     var duration = 1600, start = performance.now();
     groups.forEach(function (g) { setValue(g, 0); });
     function frame(now) {
@@ -597,10 +598,20 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
     requestAnimationFrame(frame);
   }
   var rollers = document.querySelectorAll('.roll');
+  // Show every number at 0 as soon as the page loads, ready to count up
+  if (!reduceMotion) {
+    rollers.forEach(function (el) {
+      var final = el.textContent;
+      el.dataset.final = final;
+      el.setAttribute('aria-label', final);
+      el._groups = buildWheels(el, final);
+      el._groups.forEach(function (g) { setValue(g, 0); });
+    });
+  }
   if ('IntersectionObserver' in window) {
     var rollIO = new IntersectionObserver(function (entries) {
       entries.forEach(function (en) { if (en.isIntersecting) { roll(en.target); rollIO.unobserve(en.target); } });
-    }, { threshold: 0.8 });
+    }, { threshold: 0.5 });
     rollers.forEach(function (el) { rollIO.observe(el); });
   }
   document.querySelectorAll('.stat').forEach(function (st) {
