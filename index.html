@@ -275,26 +275,16 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
   .btn, .copy, .to-top, .nav ul a.active { border: 2px solid ButtonText; }
 }
 
-/* Dice-roll numbers */
-.roll { display: inline-block; font-variant-numeric: tabular-nums; transform-origin: 50% 60%; }
-.roll.rolling { animation: dice-tumble .85s cubic-bezier(.25, 1.4, .5, 1); }
-.stat .roll.rolling { animation-name: dice-tumble-big; }
-@keyframes dice-tumble {
-  0% { transform: translateY(-10px) rotate(-22deg) scale(.88); }
-  25% { transform: translateY(3px) rotate(14deg); }
-  50% { transform: translateY(-3px) rotate(-8deg); }
-  75% { transform: translateY(1px) rotate(4deg); }
-  100% { transform: none; }
+/* Odometer numbers: count up from zero on rolling digit wheels, like a fuel pump meter */
+.roll { display: inline-block; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.roll .wheel {
+  display: inline-block; height: 1.2em; line-height: 1.2em; overflow: hidden; vertical-align: bottom;
+  -webkit-mask-image: linear-gradient(transparent, #000 22%, #000 78%, transparent);
+          mask-image: linear-gradient(transparent, #000 22%, #000 78%, transparent);
 }
-@keyframes dice-tumble-big {
-  0% { transform: translateY(-18px) rotate(-35deg) scale(.8); }
-  30% { transform: translateY(4px) rotate(20deg) scale(1.06); }
-  55% { transform: translateY(-4px) rotate(-10deg); }
-  80% { transform: translateY(1px) rotate(4deg); }
-  100% { transform: none; }
-}
+.roll .strip { display: block; will-change: transform; }
+.roll .strip span { display: block; height: 1.2em; text-align: center; }
 .stat { cursor: default; }
-@media (prefers-reduced-motion: reduce) { .roll.rolling { animation: none; } }
 </style>
 </head>
 <body>
@@ -561,30 +551,48 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
     });
   });
 
-  // Dice-roll numbers: digits shuffle and the number tumbles, then settles on its real value
+  // Odometer numbers: every number counts up from 0 on rolling wheels, then settles on its real value
   var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function buildWheels(el, final) {
+    var parts = final.split(/(\d+)/), wheels = [];
+    el.textContent = '';
+    parts.forEach(function (part) {
+      if (!part) return;
+      if (!/^\d+$/.test(part)) { el.appendChild(document.createTextNode(part)); return; }
+      var target = parseInt(part, 10), group = { target: target, cols: [] };
+      for (var k = 0; k < part.length; k++) {
+        var wheel = document.createElement('span'); wheel.className = 'wheel';
+        var strip = document.createElement('span'); strip.className = 'strip';
+        for (var d = 0; d <= 10; d++) { var c = document.createElement('span'); c.textContent = d % 10; strip.appendChild(c); }
+        wheel.appendChild(strip); el.appendChild(wheel);
+        group.cols.push({ strip: strip, place: Math.pow(10, part.length - 1 - k) });
+      }
+      wheels.push(group);
+    });
+    return wheels;
+  }
+  function setValue(group, v) {
+    group.cols.forEach(function (col) {
+      var p = col.place, digit = Math.floor(v / p) % 10, pos;
+      if (p === 1) pos = v % 10;
+      else { var rest = v % p; pos = digit + Math.max(0, rest - (p - 1)); }
+      col.strip.style.transform = 'translateY(' + (-pos * 1.2) + 'em)';
+    });
+  }
   function roll(el) {
     if (reduceMotion || el.dataset.busy) return;
     var final = el.dataset.final || el.textContent;
     el.dataset.final = final; el.dataset.busy = '1';
     el.setAttribute('aria-label', final);
-    var chars = final.split(''), digitIdx = [];
-    chars.forEach(function (c, i) { if (/\d/.test(c)) digitIdx.push(i); });
-    var duration = 850, start = performance.now(), last = 0;
-    el.classList.remove('rolling'); void el.offsetWidth; el.classList.add('rolling');
+    var groups = buildWheels(el, final);
+    var duration = 1600, start = performance.now();
+    groups.forEach(function (g) { setValue(g, 0); });
     function frame(now) {
-      var t = now - start;
-      if (now - last > 55 || t >= duration) {
-        last = now;
-        var out = chars.slice();
-        digitIdx.forEach(function (i, k) {
-          var settle = duration * (0.45 + 0.55 * (k + 1) / digitIdx.length);
-          if (t < settle) out[i] = String(Math.floor(Math.random() * 10));
-        });
-        el.textContent = out.join('');
-      }
-      if (t < duration) requestAnimationFrame(frame);
-      else { el.textContent = final; delete el.dataset.busy; setTimeout(function () { el.classList.remove('rolling'); }, 50); }
+      var t = Math.min(1, (now - start) / duration);
+      var e = 1 - Math.pow(1 - t, 3);
+      groups.forEach(function (g) { setValue(g, g.target * e); });
+      if (t < 1) requestAnimationFrame(frame);
+      else { el.textContent = final; delete el.dataset.busy; }
     }
     requestAnimationFrame(frame);
   }
