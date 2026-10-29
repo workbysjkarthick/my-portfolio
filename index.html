@@ -281,6 +281,25 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
 .stat { cursor: default; }
 .stat b { transform-origin: left bottom; transition: transform .25s ease; }
 .stat:hover b { transform: scale(1.25); }
+
+/* Certifications */
+.certs { list-style: none; margin: 0; padding: 0; display: grid; }
+.cert { display: grid; grid-template-columns: 170px minmax(0, 1fr) auto; gap: 6px 32px; align-items: center; padding-block: 22px; border-top: 1px solid var(--sjk-line, #DAE4DC); }
+.cert:last-child { border-bottom: 1px solid var(--sjk-line, #DAE4DC); }
+.cert > * { min-width: 0; }
+.cert-issuer { font-family: var(--sjk-font-mono, monospace); font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sjk-muted, #526358); }
+.cert h3 { font-size: 1.08rem; }
+.cert-meta { margin-top: 4px; color: var(--sjk-muted, #526358); font-size: 0.9rem; font-variant-numeric: tabular-nums; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.cert-status { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 2px 8px; border-radius: 6px; border: 1px solid var(--sjk-line, #DAE4DC); color: var(--sjk-muted, #526358); }
+.cert-link { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 0.9rem; text-decoration: none; color: var(--sjk-accent, #1E6B44); white-space: nowrap; }
+.cert-link svg { width: 16px; height: 16px; transition: transform .2s ease; }
+.cert-link:hover { text-decoration: underline; }
+.cert-link:hover svg { transform: translate(2px, -2px); }
+@media (max-width: 720px) {
+  .cert { grid-template-columns: 1fr; gap: 6px; }
+  .cert-link { margin-top: 4px; }
+  .cert-link-none { display: none; }
+}
 </style>
 </head>
 <body>
@@ -296,6 +315,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
       <li><a href="#experience">Experience</a></li>
       <li><a href="#projects">Projects</a></li>
       <li><a href="#skills">Skills</a></li>
+      <li><a href="#certifications">Certifications</a></li>
       <li><a href="#contact">Contact</a></li>
     </ul>
   </div>
@@ -460,6 +480,45 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
     </div>
   </section>
 
+  <section id="certifications">
+    <div class="wrap">
+      <p class="eyebrow">Certifications</p>
+      <h2>Licenses &amp; certifications</h2>
+      <ul class="certs">
+          <li class="cert">
+            <span class="cert-issuer">Adobe</span>
+            <div class="cert-body"><h3>Adobe Certified Expert – Adobe Analytics Developer</h3><p class="cert-meta">Issued Sep 2025 · Expires Sep 2027</p></div>
+            <a class="cert-link" href="https://certification.adobe.com/credential/verify/9656046e-9041-11f0-8ca0-42010a400fd3" target="_blank" rel="noopener">Verify credential <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg></a>
+          </li>
+          <li class="cert">
+            <span class="cert-issuer">LinkedIn Learning</span>
+            <div class="cert-body"><h3>Programming Foundations: Secure Coding</h3><p class="cert-meta">Issued Sep 2024</p></div>
+            <span class="cert-link-none"></span>
+          </li>
+          <li class="cert">
+            <span class="cert-issuer">Udemy</span>
+            <div class="cert-body"><h3>A Complete Beginner's Guide to Industry 4.0</h3><p class="cert-meta">Issued Sep 2024</p></div>
+            <span class="cert-link-none"></span>
+          </li>
+          <li class="cert">
+            <span class="cert-issuer">Adobe</span>
+            <div class="cert-body"><h3>Adobe Certified Expert – Adobe Experience Manager Sites Developer</h3><p class="cert-meta">Issued Aug 2024 · Expired Aug 2026 <span class="cert-status">Expired</span></p></div>
+            <a class="cert-link" href="https://www.credly.com/badges/d230dd42-961e-418a-8b10-ee304bfd5b2b" target="_blank" rel="noopener">Verify credential <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg></a>
+          </li>
+          <li class="cert">
+            <span class="cert-issuer">Google Digital Garage</span>
+            <div class="cert-body"><h3>The Fundamentals of Digital Marketing</h3><p class="cert-meta">Issued Feb 2023</p></div>
+            <span class="cert-link-none"></span>
+          </li>
+          <li class="cert">
+            <span class="cert-issuer">Lynda.com</span>
+            <div class="cert-body"><h3>Critical Thinking</h3><p class="cert-meta">Issued Jun 2018</p></div>
+            <span class="cert-link-none"></span>
+          </li>
+      </ul>
+    </div>
+  </section>
+
   <section class="contact" id="contact">
     <div class="wrap">
       <p class="eyebrow">Contact</p>
@@ -504,7 +563,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
   });
 
   var navAnchors = Array.prototype.slice.call(links.querySelectorAll('a'));
-  var ids = ['about', 'experience', 'projects', 'skills', 'contact'];
+  var ids = ['about', 'experience', 'projects', 'skills', 'certifications', 'contact'];
   var sections = ids.map(function (id) { return document.getElementById(id); });
   var header = document.querySelector('header.nav');
   var toTop = document.getElementById('to-top');
